@@ -653,6 +653,42 @@
             font-family: 'Courier New', monospace;
             font-size: 12px;
             z-index: 10000;
+            transition: transform 0.3s ease;
+        }
+
+        .debug-panel.hidden {
+            transform: translateY(100%);
+        }
+
+        .debug-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: none;
+            border-radius: 50%;
+            color: #0a0a0a;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .debug-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .debug-toggle.panel-visible {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFD700;
+            border: 2px solid #FFD700;
         }
 
         .debug-log {
@@ -833,13 +869,17 @@
         </div>
     </div>
 
-    <div class="debug-panel" id="debugPanel">
+    <div class="debug-panel hidden" id="debugPanel">
         <div class="debug-header">
             <h3>📋 Debug Console</h3>
             <button class="clear-debug" onclick="clearDebugLog()">Clear</button>
         </div>
         <div id="debugLog"></div>
     </div>
+
+    <button class="debug-toggle" id="debugToggle" onclick="toggleDebugPanel()" title="Toggle Debug Console">
+        🐛
+    </button>
 
     <div class="comparison-modal" id="comparisonModal">
         <div class="modal-overlay" onclick="closeComparison()"></div>
@@ -890,6 +930,13 @@
 
         window.clearDebugLog = function() {
             document.getElementById('debugLog').innerHTML = '';
+        };
+
+        window.toggleDebugPanel = function() {
+            const panel = document.getElementById('debugPanel');
+            const toggle = document.getElementById('debugToggle');
+            panel.classList.toggle('hidden');
+            toggle.classList.toggle('panel-visible');
         };
 
         debugLog('✅ FAL library loaded successfully', 'success');
