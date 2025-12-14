@@ -1281,50 +1281,75 @@
                 return;
             }
 
-            debugLog(`📦 Creating ZIP with ${successfulResults.length} images...`, 'info');
+            debugLog(`📦 Starting ZIP creation with ${successfulResults.length} images...`, 'info');
+            debugLog(`⏱️ This may take a while for large images...`, 'warn');
             
             const btn = event.target.closest('button');
             const originalText = btn.innerHTML;
             btn.disabled = true;
 
             try {
-                // Fetch all images in parallel with progress tracking
-                const fetchPromises = successfulResults.map(async (result, i) => {
-                    btn.innerHTML = `<span>⏳</span><span>Downloading ${i + 1}/${successfulResults.length}...</span>`;
-                    debugLog(`  📥 ${i + 1}/${successfulResults.length}: ${result.originalName}`, 'info');
+                // Fetch images one at a time to avoid overwhelming the browser
+                for (let i = 0; i < successfulResults.length; i++) {
+                    const result = successfulResults[i];
+                    const progress = `${i + 1}/${successfulResults.length}`;
                     
-                    const response = await fetch(result.processed);
-                    const blob = await response.blob();
-                    return {
-                        fileName: `processed_${i + 1}_${result.originalName}`,
-                        blob: blob
-                    };
-                });
+                    btn.innerHTML = `<span>⏳</span><span>Fetching ${progress}...</span>`;
+                    debugLog(`  📥 [${progress}] Fetching ${result.originalName}...`, 'info');
+                    
+                    try {
+                        // Add timeout to fetch
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                        
+                        const response = await fetch(result.processed, { 
+                            signal: controller.signal,
+                            mode: 'cors'
+                        });
+                        clearTimeout(timeoutId);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        
+                        const blob = await response.blob();
+                        const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+                        debugLog(`    ✓ Fetched ${sizeMB}MB`, 'info');
+                        
+                        zip.file(`processed_${i + 1}_${result.originalName}`, blob);
+                        
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            debugLog(`    ✗ Timeout after 30s - skipping ${result.originalName}`, 'error');
+                        } else {
+                            debugLog(`    ✗ Failed: ${error.message} - skipping`, 'error');
+                        }
+                    }
+                }
 
-                const files = await Promise.all(fetchPromises);
-
-                // Add all files to ZIP
                 btn.innerHTML = '<span>⏳</span><span>Creating ZIP...</span>';
-                debugLog('  🗜️ Adding files to ZIP...', 'info');
-                files.forEach(file => {
-                    zip.file(file.fileName, file.blob);
-                });
-
                 debugLog('  🗜️ Generating ZIP file...', 'info');
+                
                 const zipBlob = await zip.generateAsync({ 
                     type: 'blob',
                     compression: "DEFLATE",
-                    compressionOptions: { level: 6 }
+                    compressionOptions: { level: 1 } // Fastest compression
+                }, (metadata) => {
+                    const percent = metadata.percent.toFixed(0);
+                    btn.innerHTML = `<span>⏳</span><span>Compressing ${percent}%...</span>`;
                 });
                 
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
                 const zipName = `results_${timestamp}.zip`;
+                const zipSizeMB = (zipBlob.size / 1024 / 1024).toFixed(2);
+                
+                debugLog(`✓ ZIP ready: ${zipSizeMB}MB`, 'info');
                 saveAs(zipBlob, zipName);
-                debugLog(`✓ ZIP downloaded: ${zipName} (${(zipBlob.size / 1024 / 1024).toFixed(2)}MB)`, 'info');
+                debugLog(`✓ Download started: ${zipName}`, 'info');
 
             } catch (error) {
-                debugLog(`✗ ZIP failed: ${error.message}`, 'error');
-                alert('Failed to create ZIP');
+                debugLog(`✗ ZIP creation failed: ${error.message}`, 'error');
+                alert(`Failed to create ZIP: ${error.message}`);
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
