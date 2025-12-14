@@ -1261,21 +1261,20 @@
             }
         }
 
-        window.downloadSingle = function(url, originalName) {
-            debugLog(`⬇️ Starting download: ${originalName}`, 'info');
-            const fileName = 'processed_' + originalName;
-            
-            // Create a temporary link and click it - browser handles the download directly
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            debugLog(`✓ Download started: ${fileName}`, 'info');
+        window.downloadSingle = async function(url, originalName) {
+            try {
+                debugLog(`⬇️ Downloading ${originalName}...`, 'info');
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const fileName = 'processed_' + originalName;
+                saveAs(blob, fileName);
+                debugLog(`✓ Downloaded ${fileName}`, 'info');
+            } catch (error) {
+                debugLog(`✗ Download failed: ${error.message}`, 'error');
+            }
         }
+
+        let downloadCancelled = false;
 
         window.downloadAll = async function() {
             const successfulResults = processedResults.filter(r => r.processed);
@@ -1286,34 +1285,67 @@
                 return;
             }
 
-            const confirmed = confirm(`This will download ${successfulResults.length} images. Continue?`);
+            const totalSizeMB = (successfulResults.length * 15).toFixed(0); // Estimate 15MB per file
+            const confirmed = confirm(`This will download ${successfulResults.length} images (~${totalSizeMB}MB total). This may take several minutes. Continue?`);
             if (!confirmed) return;
 
-            debugLog(`💾 Downloading ${successfulResults.length} images...`, 'info');
+            downloadCancelled = false;
+            debugLog(`💾 Starting download of ${successfulResults.length} images...`, 'info');
+            debugLog(`💡 TIP: Downloads happen in background, you can continue using the page`, 'info');
+
+            // Create cancel button
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn btn-secondary';
+            cancelBtn.innerHTML = '<span>❌</span><span>Cancel Downloads</span>';
+            cancelBtn.style.position = 'fixed';
+            cancelBtn.style.top = '100px';
+            cancelBtn.style.right = '20px';
+            cancelBtn.style.zIndex = '10000';
+            cancelBtn.onclick = () => {
+                downloadCancelled = true;
+                debugLog('⚠️ Download cancelled by user', 'warn');
+                document.body.removeChild(cancelBtn);
+            };
+            document.body.appendChild(cancelBtn);
 
             for (let i = 0; i < successfulResults.length; i++) {
+                if (downloadCancelled) {
+                    debugLog('❌ Downloads cancelled', 'warn');
+                    break;
+                }
+
                 const result = successfulResults[i];
                 const fileName = `processed_${i + 1}_${result.originalName}`;
                 const progress = `${i + 1}/${successfulResults.length}`;
                 
-                debugLog(`  📥 [${progress}] ${fileName}`, 'info');
+                debugLog(`  📥 [${progress}] Fetching ${result.originalName}...`, 'info');
                 
-                // Create download link
-                const a = document.createElement('a');
-                a.href = result.processed;
-                a.download = fileName;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                
-                // Small delay to avoid browser blocking multiple simultaneous downloads
-                if (i < successfulResults.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                try {
+                    const response = await fetch(result.processed);
+                    const blob = await response.blob();
+                    const sizeMB = (blob.size / 1024 / 1024).toFixed(1);
+                    
+                    debugLog(`    💾 Saving ${fileName} (${sizeMB}MB)...`, 'info');
+                    saveAs(blob, fileName);
+                    debugLog(`    ✓ Done`, 'info');
+                    
+                    // Small delay between downloads
+                    if (i < successfulResults.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                    
+                } catch (error) {
+                    debugLog(`    ✗ Failed: ${error.message}`, 'error');
                 }
             }
 
-            debugLog(`✅ All downloads started!`, 'info');
+            if (cancelBtn.parentNode) {
+                document.body.removeChild(cancelBtn);
+            }
+
+            if (!downloadCancelled) {
+                debugLog(`✅ All downloads complete!`, 'info');
+            }
         }
 
         window.downloadAllAsZip = async function() {
