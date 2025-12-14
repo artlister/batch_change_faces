@@ -24,13 +24,15 @@ A beautiful, modern web application for batch processing images using Fal's face
 
 ### 2. Configure the Application
 
-Open `index.html` and replace the placeholder with your actual Fal API key:
+Open `index.html` and replace the placeholder with your actual Fal API key on line ~150:
 
 ```javascript
 fal.config({
     credentials: "YOUR_FAL_KEY_HERE" // Replace with your actual Fal API key
 });
 ```
+
+**Important**: The application will show a warning in the browser console if you haven't updated the API key.
 
 ### 3. Run the Application
 
@@ -184,6 +186,22 @@ All styles are in `style.css` following the Artlist Labs design system:
 - Smooth transitions
 
 ## Troubleshooting
+
+### Nothing happens after uploading photos
+
+1. **Check the browser console** (F12 or Right-click → Inspect → Console)
+2. **Look for these common issues**:
+   - "Fal client loaded" should appear - if not, there's a library loading issue
+   - Check for any red error messages
+   - Look for the API key warning message
+3. **Verify your API key is configured**:
+   - Open `index.html` 
+   - Search for `YOUR_FAL_KEY_HERE`
+   - Replace it with your actual Fal API key
+4. **Make sure images are being added**:
+   - You should see console logs like "Files selected: X"
+   - "Image added: filename.jpg"
+   - "Preview grid updated with X images"
 
 ### Images not processing
 - Check that your Fal API key is correctly configured

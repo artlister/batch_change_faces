@@ -3,8 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artlist Labs - Face Change Batch Processor</title>
+    <title>Artlist Labs - Face Change Batch Processor (Debug Mode)</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .debug-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border-top: 2px solid #FFD700;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 10000;
+        }
+        .debug-log {
+            margin: 4px 0;
+            padding: 4px 8px;
+            border-left: 3px solid #666;
+        }
+        .debug-log.info { border-left-color: #4CAF50; color: #4CAF50; }
+        .debug-log.warn { border-left-color: #FFC107; color: #FFC107; }
+        .debug-log.error { border-left-color: #f44336; color: #f44336; }
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .debug-header h3 {
+            color: #FFD700;
+            font-size: 14px;
+            margin: 0;
+        }
+        .clear-debug {
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 11px;
+        }
+    </style>
 </head>
 <body>
     <!-- Main Page -->
@@ -16,7 +62,7 @@
                     <span class="logo-text">Artlist Labs</span>
                 </div>
                 <div class="nav-right">
-                    <span class="user-badge">Face Change Tool</span>
+                    <span class="user-badge">Face Change Tool (DEBUG MODE)</span>
                 </div>
             </div>
         </nav>
@@ -25,6 +71,9 @@
             <div class="hero-section">
                 <h1 class="hero-title">Batch Face Change Processor ✨</h1>
                 <p class="hero-subtitle">Upload multiple images and process them all at once</p>
+                <p style="color: #FFC107; margin-top: 12px; font-size: 14px;">
+                    🔍 Debug Mode Active - Check the console panel at the bottom
+                </p>
             </div>
 
             <!-- Upload Section -->
@@ -97,6 +146,15 @@
         </div>
     </div>
 
+    <!-- Debug Panel -->
+    <div class="debug-panel" id="debugPanel">
+        <div class="debug-header">
+            <h3>📋 Debug Console</h3>
+            <button class="clear-debug" onclick="clearDebugLog()">Clear</button>
+        </div>
+        <div id="debugLog"></div>
+    </div>
+
     <!-- Image Comparison Modal -->
     <div class="comparison-modal" id="comparisonModal">
         <div class="modal-overlay" onclick="closeComparison()"></div>
@@ -133,23 +191,44 @@
     <script type="module">
         import * as fal from "https://cdn.jsdelivr.net/npm/@fal-ai/client@1.1.0/+esm";
 
+        // Debug logging function
+        window.debugLog = function(message, type = 'info') {
+            const log = document.getElementById('debugLog');
+            const entry = document.createElement('div');
+            entry.className = `debug-log ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            
+            // Also log to console
+            console[type === 'error' ? 'error' : type === 'warn' ? 'warn' : 'log'](message);
+        };
+
+        window.clearDebugLog = function() {
+            document.getElementById('debugLog').innerHTML = '';
+        };
+
+        debugLog('🚀 Application started', 'info');
+
         // Configure Fal client
+        const FAL_KEY = "YOUR_FAL_KEY_HERE"; // Replace with your actual Fal API key
+        
+        if (FAL_KEY === "YOUR_FAL_KEY_HERE") {
+            debugLog('⚠️ WARNING: Fal API key not configured! Replace YOUR_FAL_KEY_HERE with your actual key', 'warn');
+        } else {
+            debugLog('✅ Fal API key configured', 'info');
+        }
+
         fal.config({
-            credentials: "YOUR_FAL_KEY_HERE" // Replace with your actual Fal API key
+            credentials: FAL_KEY
         });
 
-        console.log('Fal client loaded:', fal);
+        debugLog('✅ Fal client loaded and configured', 'info');
+        window.fal = fal; // Make available globally for debugging
 
         let selectedImages = [];
         let processedResults = [];
-
-        // Check if API key is configured
-        window.addEventListener('load', () => {
-            const apiKeyPlaceholder = "YOUR_FAL_KEY_HERE";
-            // Show a warning if API key might not be configured
-            console.log('%c⚠️ IMPORTANT: Make sure to replace YOUR_FAL_KEY_HERE with your actual Fal API key!', 
-                'background: #ff6b6b; color: white; padding: 10px; font-size: 14px; font-weight: bold;');
-        });
 
         // File input change handler
         document.getElementById('fileInput').addEventListener('change', handleFileSelect);
@@ -170,25 +249,29 @@
             e.preventDefault();
             uploadBox.classList.remove('dragover');
             const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            debugLog(`📁 ${files.length} files dropped`, 'info');
             addImages(files);
         });
 
         function handleFileSelect(e) {
             const files = Array.from(e.target.files);
-            console.log('Files selected:', files.length);
+            debugLog(`📁 ${files.length} files selected via file picker`, 'info');
             addImages(files);
         }
 
         async function addImages(files) {
-            console.log('Adding images:', files.length);
             if (files.length === 0) {
-                console.warn('No files to add');
+                debugLog('⚠️ No files to add', 'warn');
                 return;
             }
             
+            debugLog(`➕ Adding ${files.length} images...`, 'info');
+            let added = 0;
+            
             for (const file of files) {
-                console.log('Processing file:', file.name, file.type);
+                debugLog(`  - Processing: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`, 'info');
                 const reader = new FileReader();
+                
                 reader.onload = (e) => {
                     selectedImages.push({
                         file: file,
@@ -196,12 +279,18 @@
                         name: file.name,
                         status: 'pending'
                     });
-                    console.log('Image added:', file.name, 'Total:', selectedImages.length);
-                    updatePreviewGrid();
+                    added++;
+                    debugLog(`  ✓ Added: ${file.name} (${added}/${files.length})`, 'info');
+                    
+                    if (added === files.length) {
+                        updatePreviewGrid();
+                    }
                 };
+                
                 reader.onerror = (e) => {
-                    console.error('Error reading file:', file.name, e);
+                    debugLog(`  ✗ Error reading ${file.name}: ${e}`, 'error');
                 };
+                
                 reader.readAsDataURL(file);
             }
         }
@@ -211,7 +300,7 @@
             const previewGrid = document.getElementById('previewGrid');
             const imageCount = document.getElementById('imageCount');
 
-            console.log('Updating preview grid. Images:', selectedImages.length);
+            debugLog(`🖼️ Updating preview grid with ${selectedImages.length} images`, 'info');
 
             if (selectedImages.length === 0) {
                 previewSection.classList.add('hidden');
@@ -231,65 +320,61 @@
                 </div>
             `).join('');
             
-            console.log('Preview grid updated with', selectedImages.length, 'images');
+            debugLog(`✅ Preview grid rendered successfully`, 'info');
         }
 
         window.removeImage = function(index) {
+            const removed = selectedImages[index].name;
             selectedImages.splice(index, 1);
+            debugLog(`🗑️ Removed image: ${removed}`, 'info');
             updatePreviewGrid();
         }
 
         window.clearImages = function() {
+            const count = selectedImages.length;
             selectedImages = [];
             updatePreviewGrid();
             document.getElementById('fileInput').value = '';
+            debugLog(`🗑️ Cleared all ${count} images`, 'info');
         }
 
-        async function uploadImageToFal(imageData) {
+        async function uploadImageToFal(imageData, imageName) {
             try {
-                console.log('Converting base64 to blob...');
-                // Convert base64 to blob
+                debugLog(`    ⬆️ Starting upload for ${imageName}...`, 'info');
                 const response = await fetch(imageData);
                 const blob = await response.blob();
+                debugLog(`    📦 Blob created: ${(blob.size / 1024).toFixed(1)}KB`, 'info');
                 
-                console.log('Uploading to Fal storage, blob size:', blob.size);
-                // Upload to Fal storage
                 const file = await fal.storage.upload(blob);
-                console.log('Upload successful, URL:', file.url);
+                debugLog(`    ✓ Upload complete: ${file.url}`, 'info');
                 return file.url;
             } catch (error) {
-                console.error('Error uploading image to Fal:', error);
+                debugLog(`    ✗ Upload failed: ${error.message}`, 'error');
                 throw new Error(`Upload failed: ${error.message}`);
             }
         }
 
         window.processImages = async function() {
             if (selectedImages.length === 0) {
+                debugLog('⚠️ No images selected for processing', 'warn');
                 alert('Please select images first');
                 return;
             }
 
-            console.log('Starting to process', selectedImages.length, 'images');
-
-            // Check if API key is configured
-            const apiKeyPlaceholder = "YOUR_FAL_KEY_HERE";
-            // We can't directly check the key, but we'll see errors if it's not set
+            debugLog(`🚀 Starting batch processing of ${selectedImages.length} images`, 'info');
 
             // Show processing section
             document.getElementById('previewSection').classList.add('hidden');
             document.getElementById('processingSection').classList.remove('hidden');
             
             const processingGrid = document.getElementById('processingGrid');
-            const progressFill = document.getElementById('progressFill');
-            const progressText = document.getElementById('progressText');
-            const progressPercent = document.getElementById('progressPercent');
 
             // Initialize processing grid
             processingGrid.innerHTML = selectedImages.map((img, index) => `
                 <div class="processing-card" id="processing-${index}">
                     <img src="${img.preview}" alt="${img.name}">
                     <div class="processing-status">
-                        <div class="status-text">Uploading...</div>
+                        <div class="status-text">Queued...</div>
                         <div class="status-spinner"></div>
                     </div>
                 </div>
@@ -301,39 +386,29 @@
             // Process images in parallel
             const promises = selectedImages.map(async (img, index) => {
                 try {
-                    console.log(`[${index}] Starting upload for ${img.name}`);
+                    debugLog(`[${index + 1}/${selectedImages.length}] Processing ${img.name}`, 'info');
                     
-                    // Update status to uploading
                     updateProcessingStatus(index, 'Uploading...', 'uploading');
+                    const imageUrl = await uploadImageToFal(img.preview, img.name);
 
-                    // Upload image to Fal storage
-                    const imageUrl = await uploadImageToFal(img.preview);
-                    console.log(`[${index}] Uploaded to:`, imageUrl);
-
-                    // Update status to processing
                     updateProcessingStatus(index, 'Processing...', 'processing');
-
-                    // Call Fal workflow
-                    console.log(`[${index}] Starting workflow for ${img.name}`);
+                    debugLog(`    🔄 Calling Fal workflow...`, 'info');
+                    
                     const result = await fal.subscribe("workflows/Content-vlm7ci7l2p91/colby-change-subject-face", {
                         input: {
                             image_urls: [imageUrl]
                         },
                         logs: true,
                         onQueueUpdate: (update) => {
-                            console.log(`[${index}] Queue update:`, update);
-                            if (update.status === "IN_PROGRESS") {
-                                updateProcessingStatus(index, 'Processing...', 'processing');
-                            }
+                            debugLog(`    📊 Status: ${update.status}`, 'info');
                         }
                     });
 
-                    console.log(`[${index}] Workflow result:`, result);
+                    debugLog(`    ✓ Workflow complete`, 'info');
+                    debugLog(`    📄 Result: ${JSON.stringify(result).substring(0, 200)}...`, 'info');
 
-                    // Update status to complete
                     updateProcessingStatus(index, 'Complete ✓', 'complete');
 
-                    // Store result - try different possible response structures
                     const processedUrl = result.output?.image?.url || 
                                        result.image?.url || 
                                        result.images?.[0]?.url ||
@@ -341,7 +416,7 @@
                                        null;
 
                     if (!processedUrl) {
-                        console.warn(`[${index}] No image URL found in result:`, result);
+                        debugLog(`    ⚠️ No image URL found in result`, 'warn');
                     }
 
                     processedResults.push({
@@ -353,10 +428,9 @@
 
                     completed++;
                     updateProgress(completed, selectedImages.length);
-                    console.log(`[${index}] Completed successfully`);
 
                 } catch (error) {
-                    console.error(`[${index}] Error processing ${img.name}:`, error);
+                    debugLog(`[${index + 1}] ✗ Error: ${error.message}`, 'error');
                     updateProcessingStatus(index, 'Error ✗', 'error');
                     
                     processedResults.push({
@@ -373,9 +447,7 @@
 
             await Promise.all(promises);
 
-            console.log('All processing complete. Results:', processedResults);
-
-            // Show results
+            debugLog(`✅ All processing complete! Success: ${processedResults.filter(r => r.processed).length}/${selectedImages.length}`, 'info');
             showResults();
         }
 
@@ -448,7 +520,6 @@
             document.getElementById('comparisonProcessed').src = result.processed;
             document.getElementById('comparisonModal').classList.add('show');
             
-            // Store current result for download
             window.currentComparisonResult = result;
         }
 
@@ -464,12 +535,14 @@
 
         window.downloadSingle = async function(url, originalName) {
             try {
+                debugLog(`⬇️ Downloading ${originalName}...`, 'info');
                 const response = await fetch(url);
                 const blob = await response.blob();
                 const fileName = 'processed_' + originalName;
                 saveAs(blob, fileName);
+                debugLog(`✓ Download complete: ${fileName}`, 'info');
             } catch (error) {
-                console.error('Download error:', error);
+                debugLog(`✗ Download failed: ${error.message}`, 'error');
                 alert('Failed to download image');
             }
         }
@@ -479,33 +552,37 @@
             const successfulResults = processedResults.filter(r => r.processed);
 
             if (successfulResults.length === 0) {
+                debugLog('⚠️ No successful results to download', 'warn');
                 alert('No successful results to download');
                 return;
             }
 
-            // Show loading indicator
+            debugLog(`📦 Creating ZIP with ${successfulResults.length} images...`, 'info');
+            
             const btn = event.target.closest('button');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span>⏳</span><span>Creating ZIP...</span>';
             btn.disabled = true;
 
             try {
-                // Add all processed images to zip
                 for (let i = 0; i < successfulResults.length; i++) {
                     const result = successfulResults[i];
+                    debugLog(`  📥 Adding ${i + 1}/${successfulResults.length}: ${result.originalName}`, 'info');
                     const response = await fetch(result.processed);
                     const blob = await response.blob();
                     const fileName = `processed_${i + 1}_${result.originalName}`;
                     zip.file(fileName, blob);
                 }
 
-                // Generate and download zip
+                debugLog('  🗜️ Generating ZIP file...', 'info');
                 const zipBlob = await zip.generateAsync({ type: 'blob' });
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-                saveAs(zipBlob, `face_change_results_${timestamp}.zip`);
+                const zipName = `face_change_results_${timestamp}.zip`;
+                saveAs(zipBlob, zipName);
+                debugLog(`✓ ZIP download complete: ${zipName}`, 'info');
 
             } catch (error) {
-                console.error('Error creating zip:', error);
+                debugLog(`✗ ZIP creation failed: ${error.message}`, 'error');
                 alert('Failed to create ZIP file');
             } finally {
                 btn.innerHTML = originalText;
@@ -514,16 +591,15 @@
         }
 
         window.resetProcessor = function() {
+            debugLog('🔄 Resetting processor...', 'info');
             selectedImages = [];
             processedResults = [];
             document.getElementById('resultsSection').classList.add('hidden');
             document.getElementById('previewSection').classList.add('hidden');
             document.getElementById('fileInput').value = '';
             updatePreviewGrid();
+            debugLog('✅ Reset complete', 'info');
         }
-
-        // Make functions available globally
-        window.fal = fal;
     </script>
 </body>
 </html>
