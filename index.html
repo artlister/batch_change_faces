@@ -1070,14 +1070,18 @@
                     updateProcessingStatus(index, 'Processing...', 'processing');
                     debugLog(`    🔄 Calling workflow...`, 'info');
                     
-                    // Use your workflow: workflows/Content-vlm7ci7l2p91/colby-change-subject-face
-                    const stream = await fal.stream("workflows/Content-vlm7ci7l2p91/colby-change-subject-face", {
+                    // Use subscribe instead of stream for parallel processing
+                    const result = await fal.subscribe("workflows/Content-vlm7ci7l2p91/colby-change-subject-face", {
                         input: {
                             image_urls: [imageUrl]
+                        },
+                        logs: false,
+                        onQueueUpdate: (update) => {
+                            if (update.status === "IN_PROGRESS") {
+                                debugLog(`    ⚙️ ${img.name}: In progress...`, 'info');
+                            }
                         }
                     });
-
-                    const result = await stream.done();
 
                     debugLog(`    ✓ Workflow complete`, 'info');
                     debugLog(`    📄 Result keys: ${Object.keys(result).join(', ')}`, 'info');
