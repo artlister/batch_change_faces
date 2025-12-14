@@ -1,9 +1,0 @@
-{
-  "name": "fal-batch-ui",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "@fal-ai/client": "^1.6.2",
-    "@fal-ai/server-proxy": "^0.7.0"
-  }
-}

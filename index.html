@@ -1,567 +1,468 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Artlist Labs — Batch Photo Processor</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artlist Labs - Face Change Batch Processor</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="top-nav">
-    <div class="nav-content">
-      <div class="logo">
-        <span class="logo-icon">⚡</span>
-        <span class="logo-text">Artlist Labs</span>
-      </div>
-      <div class="nav-right">
-        <span class="user-badge" id="statusBadge">Ready</span>
-        <button class="btn btn-secondary" id="clearBtn" type="button">Clear</button>
-      </div>
+    <!-- Main Page -->
+    <div id="main-page" class="page">
+        <nav class="top-nav">
+            <div class="nav-content">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">Artlist Labs</span>
+                </div>
+                <div class="nav-right">
+                    <span class="user-badge">Face Change Tool</span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <div class="hero-section">
+                <h1 class="hero-title">Batch Face Change Processor ✨</h1>
+                <p class="hero-subtitle">Upload multiple images and process them all at once</p>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-container">
+                    <div class="upload-box" id="uploadBox">
+                        <div class="upload-icon">📁</div>
+                        <h3>Drop images here or click to browse</h3>
+                        <p>Upload 1-50+ images (JPG, PNG, WebP)</p>
+                        <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                        <button class="primary-btn" onclick="document.getElementById('fileInput').click()">
+                            Select Images
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview Grid -->
+                <div id="previewSection" class="preview-section hidden">
+                    <div class="section-header">
+                        <h2 class="section-title">Selected Images (<span id="imageCount">0</span>)</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="clearImages()">
+                                <span>🗑️</span>
+                                <span>Clear All</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="processImages()" id="processBtn">
+                                <span>✨</span>
+                                <span>Process All</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="previewGrid" class="preview-grid"></div>
+                </div>
+
+                <!-- Processing Section -->
+                <div id="processingSection" class="processing-section hidden">
+                    <div class="section-header">
+                        <h2 class="section-title">Processing</h2>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progressText">0 / 0 processed</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                    </div>
+                    <div id="processingGrid" class="processing-grid"></div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="results-section hidden">
+                    <div class="section-header">
+                        <h2 class="section-title">Results (<span id="resultsCount">0</span>)</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="resetProcessor()">
+                                <span>🔄</span>
+                                <span>Process More</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="downloadAllAsZip()">
+                                <span>⬇️</span>
+                                <span>Download All as ZIP</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="resultsGrid" class="results-grid"></div>
+                </div>
+            </div>
+        </div>
     </div>
-  </nav>
 
-  <main class="main-content">
-    <section class="hero-section">
-      <h1 class="hero-title">Batch Photo Processor ✨</h1>
-      <p class="hero-subtitle">
-        Upload 1–50+ images, process them in parallel (FAL hookup later), compare before/after, then download a ZIP.
-      </p>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header">
-        <div>
-          <h2 class="panel-title">Upload</h2>
-          <p class="panel-subtitle">Drag & drop or pick files. Works with large batches.</p>
+    <!-- Image Comparison Modal -->
+    <div class="comparison-modal" id="comparisonModal">
+        <div class="modal-overlay" onclick="closeComparison()"></div>
+        <div class="comparison-content">
+            <div class="modal-header-bar">
+                <h2>Before & After</h2>
+                <button class="modal-close-btn" onclick="closeComparison()">×</button>
+            </div>
+            <div class="comparison-images">
+                <div class="comparison-side">
+                    <h3>Original</h3>
+                    <img id="comparisonOriginal" src="" alt="Original">
+                </div>
+                <div class="comparison-divider"></div>
+                <div class="comparison-side">
+                    <h3>Processed</h3>
+                    <img id="comparisonProcessed" src="" alt="Processed">
+                </div>
+            </div>
+            <div class="comparison-actions">
+                <button class="btn btn-primary" onclick="downloadComparisonResult()">
+                    <span>⬇️</span>
+                    <span>Download Processed</span>
+                </button>
+            </div>
         </div>
-        <div class="panel-actions">
-          <button class="btn btn-secondary" id="demoBtn" type="button" title="Uses a placeholder processor for now">Run demo processing</button>
-          <button class="btn btn-primary" id="processBtn" type="button" disabled>Process on FAL</button>
-        </div>
-      </div>
+    </div>
 
-      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload images">
-        <div class="drop-inner">
-          <div class="drop-icon">🖼️</div>
-          <div class="drop-text">
-            <div class="drop-title">Drop images here</div>
-            <div class="drop-subtitle">or click to select (JPG, PNG, WEBP)</div>
-          </div>
-          <input id="fileInput" class="file-input" type="file" accept="image/*" multiple />
-        </div>
-      </div>
+    <!-- JSZip for creating zip files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- FileSaver for downloading files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script type="module">
+        import { fal } from "https://cdn.jsdelivr.net/npm/@fal-ai/client@1.0.0/dist/index.js";
 
-      <div class="toolbar">
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-label">Selected</div>
-            <div class="stat-value" id="selectedCount">0</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Processed</div>
-            <div class="stat-value" id="processedCount">0</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Failed</div>
-            <div class="stat-value" id="failedCount">0</div>
-          </div>
-        </div>
+        // Configure Fal client
+        fal.config({
+            credentials: "YOUR_FAL_KEY_HERE" // Replace with your actual Fal API key
+        });
 
-        <div class="toolbar-right">
-          <label class="toggle">
-            <input type="checkbox" id="onlyDoneToggle" />
-            <span>Show processed only</span>
-          </label>
+        let selectedImages = [];
+        let processedResults = [];
 
-          <button class="btn btn-secondary" id="downloadZipBtn" type="button" disabled>
-            <span>⬇️</span><span>Download ZIP</span>
-          </button>
-        </div>
-      </div>
+        // File input change handler
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
-      <div class="note">
-        <span class="note-dot">●</span>
-        <span>
-          <strong>Hookup point:</strong> replace <code>processImage()</code> with your FAL call. The UI already supports parallel runs and ZIP export.
-        </span>
-      </div>
-    </section>
+        // Drag and drop handlers
+        const uploadBox = document.getElementById('uploadBox');
+        
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
 
-    <section class="results">
-      <div class="section-header">
-        <h2 class="section-title">Results</h2>
-        <div class="section-controls">
-          <input class="search" id="searchInput" placeholder="Search filename…" />
-          <select class="select" id="compareMode">
-            <option value="slider" selected>Comparison: Slider</option>
-            <option value="side-by-side">Comparison: Side-by-side</option>
-          </select>
-        </div>
-      </div>
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
 
-      <div id="grid" class="results-grid">
-        <div class="empty-state" id="emptyState">No images yet — upload some to get started.</div>
-      </div>
-    </section>
-  </main>
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            addImages(files);
+        });
 
-  <!-- JSZip for ZIP download (client-side) -->
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
-  <script>
-    // ======= State =======
-    const state = {
-      items: [], // { id, file, name, size, type, srcOriginal, srcProcessed, processedBlob, status, error }
-      processing: false
-    };
-
-    const el = {
-      statusBadge: document.getElementById('statusBadge'),
-      clearBtn: document.getElementById('clearBtn'),
-      demoBtn: document.getElementById('demoBtn'),
-      processBtn: document.getElementById('processBtn'),
-      downloadZipBtn: document.getElementById('downloadZipBtn'),
-      dropzone: document.getElementById('dropzone'),
-      fileInput: document.getElementById('fileInput'),
-      grid: document.getElementById('grid'),
-      emptyState: document.getElementById('emptyState'),
-      selectedCount: document.getElementById('selectedCount'),
-      processedCount: document.getElementById('processedCount'),
-      failedCount: document.getElementById('failedCount'),
-      onlyDoneToggle: document.getElementById('onlyDoneToggle'),
-      compareMode: document.getElementById('compareMode'),
-      searchInput: document.getElementById('searchInput'),
-    };
-
-    // ======= Helpers =======
-    const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-
-    function setBadge(text, tone = 'neutral') {
-      el.statusBadge.textContent = text;
-      el.statusBadge.dataset.tone = tone;
-    }
-
-    function formatBytes(bytes) {
-      const units = ['B','KB','MB','GB'];
-      let v = bytes;
-      let i = 0;
-      while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
-      return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
-    }
-
-    function updateStats() {
-      const selected = state.items.length;
-      const processed = state.items.filter(i => i.status === 'done').length;
-      const failed = state.items.filter(i => i.status === 'error').length;
-
-      el.selectedCount.textContent = selected;
-      el.processedCount.textContent = processed;
-      el.failedCount.textContent = failed;
-
-      el.processBtn.disabled = selected === 0 || state.processing;
-      el.demoBtn.disabled = selected === 0 || state.processing;
-      el.downloadZipBtn.disabled = processed === 0 || state.processing;
-      el.clearBtn.disabled = selected === 0 || state.processing;
-
-      if (state.processing) setBadge('Processing…', 'warn');
-      else if (processed > 0 && processed === selected) setBadge('All done', 'ok');
-      else if (processed > 0) setBadge(`Done: ${processed}/${selected}`, 'ok');
-      else setBadge('Ready', 'neutral');
-    }
-
-    function passesFilters(item) {
-      if (el.onlyDoneToggle.checked && item.status !== 'done') return false;
-      const q = el.searchInput.value.trim().toLowerCase();
-      if (q && !item.name.toLowerCase().includes(q)) return false;
-      return true;
-    }
-
-    function render() {
-      el.grid.innerHTML = '';
-      const mode = el.compareMode.value;
-
-      const visible = state.items.filter(passesFilters);
-      if (visible.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'empty-state';
-        empty.textContent = state.items.length ? 'No matches. Try clearing filters.' : 'No images yet — upload some to get started.';
-        el.grid.appendChild(empty);
-        updateStats();
-        return;
-      }
-
-      for (const item of visible) {
-        const card = document.createElement('article');
-        card.className = 'result-card';
-
-        const header = document.createElement('div');
-        header.className = 'result-header';
-
-        const meta = document.createElement('div');
-        meta.className = 'result-meta';
-
-        const name = document.createElement('div');
-        name.className = 'result-name';
-        name.textContent = item.name;
-
-        const sub = document.createElement('div');
-        sub.className = 'result-sub';
-        sub.textContent = `${formatBytes(item.size)} • ${item.type || 'image'}`;
-
-        meta.appendChild(name);
-        meta.appendChild(sub);
-
-        const pill = document.createElement('div');
-        pill.className = `pill pill-${item.status}`;
-        pill.textContent = item.status === 'idle' ? 'Queued' :
-                          item.status === 'processing' ? 'Processing' :
-                          item.status === 'done' ? 'Done' : 'Failed';
-
-        header.appendChild(meta);
-        header.appendChild(pill);
-
-        const compare = document.createElement('div');
-        compare.className = `compare compare-${mode}`;
-
-        if (mode === 'side-by-side') {
-          compare.appendChild(makeImgBlock('Before', item.srcOriginal));
-          compare.appendChild(makeImgBlock('After', item.srcProcessed || item.srcOriginal, item.status !== 'done'));
-        } else {
-          compare.appendChild(makeSliderCompare(item));
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            addImages(files);
         }
 
-        const footer = document.createElement('div');
-        footer.className = 'result-footer';
+        async function addImages(files) {
+            for (const file of files) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    selectedImages.push({
+                        file: file,
+                        preview: e.target.result,
+                        name: file.name,
+                        status: 'pending'
+                    });
+                    updatePreviewGrid();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
 
-        const actions = document.createElement('div');
-        actions.className = 'result-actions';
+        function updatePreviewGrid() {
+            const previewSection = document.getElementById('previewSection');
+            const previewGrid = document.getElementById('previewGrid');
+            const imageCount = document.getElementById('imageCount');
 
-        const btnReprocess = document.createElement('button');
-        btnReprocess.className = 'btn btn-secondary btn-sm';
-        btnReprocess.type = 'button';
-        btnReprocess.textContent = 'Reprocess';
-        btnReprocess.disabled = state.processing;
-        btnReprocess.onclick = () => processBatch([item.id], { demo: true });
+            if (selectedImages.length === 0) {
+                previewSection.classList.add('hidden');
+                return;
+            }
 
-        const btnDownload = document.createElement('button');
-        btnDownload.className = 'btn btn-primary btn-sm';
-        btnDownload.type = 'button';
-        btnDownload.innerHTML = '<span>⬇️</span><span>Download</span>';
-        btnDownload.disabled = item.status !== 'done';
-        btnDownload.onclick = () => downloadBlob(item.processedBlob, deriveOutName(item.name));
+            previewSection.classList.remove('hidden');
+            imageCount.textContent = selectedImages.length;
 
-        actions.appendChild(btnReprocess);
-        actions.appendChild(btnDownload);
+            previewGrid.innerHTML = selectedImages.map((img, index) => `
+                <div class="preview-card">
+                    <img src="${img.preview}" alt="${img.name}">
+                    <div class="preview-info">
+                        <div class="preview-name">${img.name}</div>
+                        <button class="remove-btn" onclick="window.removeImage(${index})">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-        const error = document.createElement('div');
-        error.className = 'result-error';
-        error.textContent = item.status === 'error' ? (item.error || 'Failed to process') : '';
-        if (!error.textContent) error.classList.add('hidden');
+        window.removeImage = function(index) {
+            selectedImages.splice(index, 1);
+            updatePreviewGrid();
+        }
 
-        footer.appendChild(actions);
-        footer.appendChild(error);
+        window.clearImages = function() {
+            selectedImages = [];
+            updatePreviewGrid();
+            document.getElementById('fileInput').value = '';
+        }
 
-        card.appendChild(header);
-        card.appendChild(compare);
-        card.appendChild(footer);
-        el.grid.appendChild(card);
-      }
+        async function uploadImageToFal(imageData) {
+            try {
+                // Convert base64 to blob
+                const response = await fetch(imageData);
+                const blob = await response.blob();
+                
+                // Upload to Fal storage
+                const file = await fal.storage.upload(blob);
+                return file.url;
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                throw error;
+            }
+        }
 
-      updateStats();
-    }
+        window.processImages = async function() {
+            if (selectedImages.length === 0) return;
 
-    function makeImgBlock(label, src, dim = false) {
-      const wrap = document.createElement('div');
-      wrap.className = `img-block ${dim ? 'img-dim' : ''}`;
+            // Show processing section
+            document.getElementById('previewSection').classList.add('hidden');
+            document.getElementById('processingSection').classList.remove('hidden');
+            
+            const processingGrid = document.getElementById('processingGrid');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
 
-      const cap = document.createElement('div');
-      cap.className = 'img-cap';
-      cap.textContent = label;
+            // Initialize processing grid
+            processingGrid.innerHTML = selectedImages.map((img, index) => `
+                <div class="processing-card" id="processing-${index}">
+                    <img src="${img.preview}" alt="${img.name}">
+                    <div class="processing-status">
+                        <div class="status-text">Uploading...</div>
+                        <div class="status-spinner"></div>
+                    </div>
+                </div>
+            `).join('');
 
-      const img = document.createElement('img');
-      img.alt = label;
-      img.src = src;
-      img.loading = 'lazy';
+            processedResults = [];
+            let completed = 0;
 
-      wrap.appendChild(cap);
-      wrap.appendChild(img);
-      return wrap;
-    }
+            // Process images in parallel
+            const promises = selectedImages.map(async (img, index) => {
+                try {
+                    // Update status to uploading
+                    updateProcessingStatus(index, 'Uploading...', 'uploading');
 
-    function makeSliderCompare(item) {
-      const wrap = document.createElement('div');
-      wrap.className = 'slider-wrap';
+                    // Upload image to Fal storage
+                    const imageUrl = await uploadImageToFal(img.preview);
 
-      const before = document.createElement('img');
-      before.className = 'slider-img';
-      before.alt = 'Before';
-      before.src = item.srcOriginal;
+                    // Update status to processing
+                    updateProcessingStatus(index, 'Processing...', 'processing');
 
-      const afterWrap = document.createElement('div');
-      afterWrap.className = 'slider-after';
-      afterWrap.style.setProperty('--pct', '50%');
+                    // Call Fal workflow
+                    const stream = await fal.stream("workflows/Content-vlm7ci7l2p91/colby-change-subject-face", {
+                        input: {
+                            image_urls: [imageUrl]
+                        }
+                    });
 
-      const after = document.createElement('img');
-      after.className = 'slider-img';
-      after.alt = 'After';
-      after.src = item.srcProcessed || item.srcOriginal;
-      if (item.status !== 'done') after.classList.add('img-dim-filter');
+                    // Wait for completion
+                    const result = await stream.done();
 
-      afterWrap.appendChild(after);
+                    // Update status to complete
+                    updateProcessingStatus(index, 'Complete ✓', 'complete');
 
-      const handle = document.createElement('div');
-      handle.className = 'slider-handle';
-      handle.innerHTML = '<span class="handle-dot"></span>';
+                    // Store result
+                    processedResults.push({
+                        original: img.preview,
+                        originalName: img.name,
+                        processed: result.output?.image?.url || result.image?.url || null,
+                        data: result
+                    });
 
-      const range = document.createElement('input');
-      range.type = 'range';
-      range.min = 0;
-      range.max = 100;
-      range.value = 50;
-      range.className = 'slider-range';
-      range.setAttribute('aria-label', 'Comparison slider');
+                    completed++;
+                    updateProgress(completed, selectedImages.length);
 
-      const labelBar = document.createElement('div');
-      labelBar.className = 'slider-labels';
-      labelBar.innerHTML = '<span>Before</span><span>After</span>';
+                } catch (error) {
+                    console.error(`Error processing ${img.name}:`, error);
+                    updateProcessingStatus(index, 'Error ✗', 'error');
+                    
+                    processedResults.push({
+                        original: img.preview,
+                        originalName: img.name,
+                        processed: null,
+                        error: error.message
+                    });
 
-      function update(v) {
-        afterWrap.style.setProperty('--pct', v + '%');
-        handle.style.left = v + '%';
-      }
-      update(50);
-
-      range.addEventListener('input', (e) => update(e.target.value));
-
-      wrap.appendChild(before);
-      wrap.appendChild(afterWrap);
-      wrap.appendChild(labelBar);
-      wrap.appendChild(handle);
-      wrap.appendChild(range);
-
-      return wrap;
-    }
-
-    function deriveOutName(name) {
-      const dot = name.lastIndexOf('.');
-      if (dot === -1) return name + '-processed.png';
-      return name.slice(0, dot) + '-processed' + name.slice(dot);
-    }
-
-    function downloadBlob(blob, filename) {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    }
-
-    // ======= Upload handling =======
-    function addFiles(fileList) {
-      const files = Array.from(fileList).filter(f => f.type && f.type.startsWith('image/'));
-      if (!files.length) return;
-
-      for (const file of files) {
-        const id = uid();
-        const srcOriginal = URL.createObjectURL(file);
-
-        state.items.push({
-          id,
-          file,
-          name: file.name || `image-${id}.png`,
-          size: file.size || 0,
-          type: file.type || 'image/*',
-          srcOriginal,
-          srcProcessed: null,
-          processedBlob: null,
-          status: 'idle',
-          error: null
-        });
-      }
-
-      render();
-    }
-
-    el.dropzone.addEventListener('click', () => el.fileInput.click());
-    el.fileInput.addEventListener('change', (e) => addFiles(e.target.files));
-
-    el.dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      el.dropzone.classList.add('dropzone-hover');
-    });
-    el.dropzone.addEventListener('dragleave', () => el.dropzone.classList.remove('dropzone-hover'));
-    el.dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      el.dropzone.classList.remove('dropzone-hover');
-      addFiles(e.dataTransfer.files);
-    });
-
-    // keyboard accessibility
-    el.dropzone.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.fileInput.click(); }
-    });
-
-    // ======= Processing (demo placeholder + parallel queue) =======
-    async function processImageDemo(file) {
-      // Placeholder: convert to canvas and apply a tiny "processing" effect (slight contrast + vignette)
-      // Replace with FAL call later; return a Blob.
-      const img = await blobToImage(file);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d', { willReadFrequently: false });
-
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-
-      ctx.drawImage(img, 0, 0);
-
-      // simple contrast
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const d = imageData.data;
-      const contrast = 1.08;
-      const intercept = 128 * (1 - contrast);
-
-      for (let i = 0; i < d.length; i += 4) {
-        d[i] = clamp(d[i] * contrast + intercept);
-        d[i + 1] = clamp(d[i + 1] * contrast + intercept);
-        d[i + 2] = clamp(d[i + 2] * contrast + intercept);
-      }
-      ctx.putImageData(imageData, 0, 0);
-
-      // vignette
-      const grd = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.2,
-        canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.7
-      );
-      grd.addColorStop(0, 'rgba(0,0,0,0)');
-      grd.addColorStop(1, 'rgba(0,0,0,0.18)');
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      return await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.92));
-    }
-
-    function clamp(v) { return Math.max(0, Math.min(255, v)); }
-
-    function blobToImage(fileOrBlob) {
-      return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(fileOrBlob);
-        const img = new Image();
-        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = reject;
-        img.src = url;
-      });
-    }
-
-    async function processImageFal(file) {
-      // TODO: replace with real FAL call. Keep signature returning a Blob.
-      // Example shape:
-      // const res = await fetch('/fal/endpoint', { method:'POST', body: formData })
-      // return await res.blob();
-      throw new Error('FAL hookup not implemented yet');
-    }
-
-    async function processBatch(ids, { demo = false } = {}) {
-      if (state.processing) return;
-      state.processing = true;
-      updateStats();
-
-      // cap parallelism to keep UI responsive for huge batches (tweak as needed)
-      const CONCURRENCY = 6;
-
-      const queue = state.items.filter(i => ids.includes(i.id));
-      if (!queue.length) { state.processing = false; updateStats(); return; }
-
-      for (const item of queue) { item.status = 'processing'; item.error = null; }
-      render();
-
-      let idx = 0;
-      let active = 0;
-
-      return await new Promise((resolve) => {
-        const next = () => {
-          while (active < CONCURRENCY && idx < queue.length) {
-            const item = queue[idx++];
-            active++;
-
-            (async () => {
-              try {
-                const outBlob = demo ? await processImageDemo(item.file) : await processImageFal(item.file);
-                item.processedBlob = outBlob;
-                item.srcProcessed = URL.createObjectURL(outBlob);
-                item.status = 'done';
-              } catch (err) {
-                item.status = 'error';
-                item.error = err?.message || String(err);
-              } finally {
-                active--;
-                render();
-                if (idx >= queue.length && active === 0) {
-                  state.processing = false;
-                  updateStats();
-                  resolve();
-                } else {
-                  next();
+                    completed++;
+                    updateProgress(completed, selectedImages.length);
                 }
-              }
-            })();
-          }
-        };
-        next();
-      });
-    }
+            });
 
-    // ======= ZIP download =======
-    async function downloadZip() {
-      const done = state.items.filter(i => i.status === 'done' && i.processedBlob);
-      if (!done.length) return;
+            await Promise.all(promises);
 
-      setBadge('Building ZIP…', 'warn');
-      el.downloadZipBtn.disabled = true;
+            // Show results
+            showResults();
+        }
 
-      const zip = new JSZip();
-      const folder = zip.folder('processed');
+        function updateProcessingStatus(index, text, status) {
+            const card = document.getElementById(`processing-${index}`);
+            if (card) {
+                const statusEl = card.querySelector('.processing-status');
+                statusEl.className = `processing-status ${status}`;
+                statusEl.querySelector('.status-text').textContent = text;
+            }
+        }
 
-      for (const item of done) {
-        const name = deriveOutName(item.name);
-        folder.file(name, item.processedBlob);
-      }
+        function updateProgress(completed, total) {
+            const percent = Math.round((completed / total) * 100);
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = `${completed} / ${total} processed`;
+            document.getElementById('progressPercent').textContent = percent + '%';
+        }
 
-      const blob = await zip.generateAsync({ type: 'blob' });
-      downloadBlob(blob, `artlist-labs-processed-${new Date().toISOString().slice(0,10)}.zip`);
+        function showResults() {
+            document.getElementById('processingSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.remove('hidden');
+            
+            const resultsGrid = document.getElementById('resultsGrid');
+            const resultsCount = document.getElementById('resultsCount');
 
-      updateStats();
-    }
+            const successfulResults = processedResults.filter(r => r.processed);
+            resultsCount.textContent = successfulResults.length;
 
-    // ======= Wiring =======
-    el.demoBtn.addEventListener('click', () => processBatch(state.items.map(i => i.id), { demo: true }));
-    el.processBtn.addEventListener('click', () => processBatch(state.items.map(i => i.id), { demo: false }));
-    el.downloadZipBtn.addEventListener('click', downloadZip);
+            resultsGrid.innerHTML = processedResults.map((result, index) => {
+                if (result.processed) {
+                    return `
+                        <div class="result-card" onclick="window.showComparison(${index})">
+                            <div class="result-images">
+                                <div class="result-half">
+                                    <img src="${result.original}" alt="Original">
+                                    <div class="result-label">Original</div>
+                                </div>
+                                <div class="result-half">
+                                    <img src="${result.processed}" alt="Processed">
+                                    <div class="result-label">Processed</div>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn-icon" onclick="event.stopPropagation(); window.downloadSingle('${result.processed}', '${result.originalName}')" title="Download">
+                                    ⬇️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="result-card error">
+                            <img src="${result.original}" alt="Original">
+                            <div class="error-overlay">
+                                <div class="error-text">Processing Failed</div>
+                                <div class="error-detail">${result.error || 'Unknown error'}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
 
-    el.clearBtn.addEventListener('click', () => {
-      for (const item of state.items) {
-        try { URL.revokeObjectURL(item.srcOriginal); } catch {}
-        try { if (item.srcProcessed) URL.revokeObjectURL(item.srcProcessed); } catch {}
-      }
-      state.items = [];
-      state.processing = false;
-      el.fileInput.value = '';
-      render();
-    });
+        window.showComparison = function(index) {
+            const result = processedResults[index];
+            if (!result.processed) return;
 
-    el.onlyDoneToggle.addEventListener('change', render);
-    el.compareMode.addEventListener('change', render);
-    el.searchInput.addEventListener('input', () => {
-      // simple debounce
-      if (el.searchInput._t) clearTimeout(el.searchInput._t);
-      el.searchInput._t = setTimeout(render, 80);
-    });
+            document.getElementById('comparisonOriginal').src = result.original;
+            document.getElementById('comparisonProcessed').src = result.processed;
+            document.getElementById('comparisonModal').classList.add('show');
+            
+            // Store current result for download
+            window.currentComparisonResult = result;
+        }
 
-    // initial render
-    render();
-  </script>
+        window.closeComparison = function() {
+            document.getElementById('comparisonModal').classList.remove('show');
+        }
+
+        window.downloadComparisonResult = function() {
+            if (window.currentComparisonResult) {
+                downloadSingle(window.currentComparisonResult.processed, window.currentComparisonResult.originalName);
+            }
+        }
+
+        window.downloadSingle = async function(url, originalName) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const fileName = 'processed_' + originalName;
+                saveAs(blob, fileName);
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Failed to download image');
+            }
+        }
+
+        window.downloadAllAsZip = async function() {
+            const zip = new JSZip();
+            const successfulResults = processedResults.filter(r => r.processed);
+
+            if (successfulResults.length === 0) {
+                alert('No successful results to download');
+                return;
+            }
+
+            // Show loading indicator
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span><span>Creating ZIP...</span>';
+            btn.disabled = true;
+
+            try {
+                // Add all processed images to zip
+                for (let i = 0; i < successfulResults.length; i++) {
+                    const result = successfulResults[i];
+                    const response = await fetch(result.processed);
+                    const blob = await response.blob();
+                    const fileName = `processed_${i + 1}_${result.originalName}`;
+                    zip.file(fileName, blob);
+                }
+
+                // Generate and download zip
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                saveAs(zipBlob, `face_change_results_${timestamp}.zip`);
+
+            } catch (error) {
+                console.error('Error creating zip:', error);
+                alert('Failed to create ZIP file');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        window.resetProcessor = function() {
+            selectedImages = [];
+            processedResults = [];
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('previewSection').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            updatePreviewGrid();
+        }
+
+        // Make functions available globally
+        window.fal = fal;
+    </script>
 </body>
 </html>
