@@ -1261,18 +1261,20 @@
             }
         }
 
-        window.downloadSingle = async function(url, originalName) {
-            try {
-                debugLog(`⬇️ Downloading ${originalName}...`, 'info');
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const fileName = 'processed_' + originalName;
-                saveAs(blob, fileName);
-                debugLog(`✓ Downloaded ${fileName}`, 'info');
-            } catch (error) {
-                debugLog(`✗ Download failed: ${error.message}`, 'error');
-                alert('Failed to download');
-            }
+        window.downloadSingle = function(url, originalName) {
+            debugLog(`⬇️ Starting download: ${originalName}`, 'info');
+            const fileName = 'processed_' + originalName;
+            
+            // Create a temporary link and click it - browser handles the download directly
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            debugLog(`✓ Download started: ${fileName}`, 'info');
         }
 
         window.downloadAll = async function() {
@@ -1284,50 +1286,34 @@
                 return;
             }
 
-            const confirmed = confirm(`This will download ${successfulResults.length} images one at a time. Continue?`);
+            const confirmed = confirm(`This will download ${successfulResults.length} images. Continue?`);
             if (!confirmed) return;
 
-            debugLog(`💾 Starting download of ${successfulResults.length} images...`, 'info');
-            debugLog(`⏱️ Downloading with 2-second delay between files...`, 'info');
+            debugLog(`💾 Downloading ${successfulResults.length} images...`, 'info');
 
             for (let i = 0; i < successfulResults.length; i++) {
                 const result = successfulResults[i];
+                const fileName = `processed_${i + 1}_${result.originalName}`;
                 const progress = `${i + 1}/${successfulResults.length}`;
                 
-                debugLog(`  📥 [${progress}] ${result.originalName}...`, 'info');
+                debugLog(`  📥 [${progress}] ${fileName}`, 'info');
                 
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 30000);
-                    
-                    const response = await fetch(result.processed, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    
-                    const blob = await response.blob();
-                    const fileName = `processed_${i + 1}_${result.originalName}`;
-                    saveAs(blob, fileName);
-                    
-                    debugLog(`    ✓ Downloaded ${fileName}`, 'info');
-                    
-                    // Wait 2 seconds between downloads to avoid overwhelming browser/network
-                    if (i < successfulResults.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                    }
-                    
-                } catch (error) {
-                    if (error.name === 'AbortError') {
-                        debugLog(`    ✗ Timeout - skipped`, 'error');
-                    } else {
-                        debugLog(`    ✗ Failed: ${error.message}`, 'error');
-                    }
+                // Create download link
+                const a = document.createElement('a');
+                a.href = result.processed;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                // Small delay to avoid browser blocking multiple simultaneous downloads
+                if (i < successfulResults.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
             }
 
-            debugLog(`✅ Download complete!`, 'info');
+            debugLog(`✅ All downloads started!`, 'info');
         }
 
         window.downloadAllAsZip = async function() {
