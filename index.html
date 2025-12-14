@@ -1079,14 +1079,20 @@
 
                     const result = await stream.done();
 
-                    debugLog(`    ✓ Complete`, 'info');
+                    debugLog(`    ✓ Workflow complete`, 'info');
+                    debugLog(`    📄 Result keys: ${Object.keys(result).join(', ')}`, 'info');
+                    debugLog(`    📄 Full result: ${JSON.stringify(result).substring(0, 500)}`, 'info');
+                    
                     updateProcessingStatus(index, 'Complete ✓', 'complete');
 
                     const processedUrl = result.output?.image?.url || 
                                        result.image?.url || 
                                        result.images?.[0]?.url ||
                                        result.output?.url ||
+                                       result.url ||
                                        null;
+                    
+                    debugLog(`    🖼️ Processed URL: ${processedUrl || 'NOT FOUND'}`, processedUrl ? 'info' : 'error');
 
                     processedResults.push({
                         original: img.preview,
