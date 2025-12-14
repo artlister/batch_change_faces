@@ -1085,7 +1085,8 @@
                     
                     updateProcessingStatus(index, 'Complete ✓', 'complete');
 
-                    const processedUrl = result.output?.image?.url || 
+                    const processedUrl = result.output?.images?.[0]?.url ||
+                                       result.output?.image?.url || 
                                        result.image?.url || 
                                        result.images?.[0]?.url ||
                                        result.output?.url ||
