@@ -857,9 +857,13 @@
                                 <span>🔄</span>
                                 <span>Process More</span>
                             </button>
+                            <button class="btn btn-secondary" onclick="downloadAll()">
+                                <span>💾</span>
+                                <span>Download All</span>
+                            </button>
                             <button class="btn btn-primary" onclick="downloadAllAsZip()">
-                                <span>⬇️</span>
-                                <span>Download All as ZIP</span>
+                                <span>📦</span>
+                                <span>Download ZIP</span>
                             </button>
                         </div>
                     </div>
@@ -1212,8 +1216,8 @@
                         <div class="result-card" onclick="window.showComparison(${index})">
                             <div class="result-images">
                                 <div class="result-half" style="flex: 1 0 100%;">
-                                    <img src="${result.processed}" alt="Processed" loading="lazy">
-                                    <div class="result-label">Click to compare</div>
+                                    <img src="${result.original}" alt="Original" loading="lazy">
+                                    <div class="result-label">Click to view result</div>
                                 </div>
                             </div>
                             <div class="result-actions">
@@ -1269,6 +1273,61 @@
                 debugLog(`✗ Download failed: ${error.message}`, 'error');
                 alert('Failed to download');
             }
+        }
+
+        window.downloadAll = async function() {
+            const successfulResults = processedResults.filter(r => r.processed);
+
+            if (successfulResults.length === 0) {
+                debugLog('⚠️ No results to download', 'warn');
+                alert('No results to download');
+                return;
+            }
+
+            const confirmed = confirm(`This will download ${successfulResults.length} images one at a time. Continue?`);
+            if (!confirmed) return;
+
+            debugLog(`💾 Starting download of ${successfulResults.length} images...`, 'info');
+            debugLog(`⏱️ Downloading with 2-second delay between files...`, 'info');
+
+            for (let i = 0; i < successfulResults.length; i++) {
+                const result = successfulResults[i];
+                const progress = `${i + 1}/${successfulResults.length}`;
+                
+                debugLog(`  📥 [${progress}] ${result.originalName}...`, 'info');
+                
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000);
+                    
+                    const response = await fetch(result.processed, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const blob = await response.blob();
+                    const fileName = `processed_${i + 1}_${result.originalName}`;
+                    saveAs(blob, fileName);
+                    
+                    debugLog(`    ✓ Downloaded ${fileName}`, 'info');
+                    
+                    // Wait 2 seconds between downloads to avoid overwhelming browser/network
+                    if (i < successfulResults.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
+                    
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        debugLog(`    ✗ Timeout - skipped`, 'error');
+                    } else {
+                        debugLog(`    ✗ Failed: ${error.message}`, 'error');
+                    }
+                }
+            }
+
+            debugLog(`✅ Download complete!`, 'info');
         }
 
         window.downloadAllAsZip = async function() {
