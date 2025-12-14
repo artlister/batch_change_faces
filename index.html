@@ -1211,13 +1211,9 @@
                     return `
                         <div class="result-card" onclick="window.showComparison(${index})">
                             <div class="result-images">
-                                <div class="result-half">
-                                    <img src="${result.original}" alt="Original">
-                                    <div class="result-label">Original</div>
-                                </div>
-                                <div class="result-half">
-                                    <img src="${result.processed}" alt="Processed">
-                                    <div class="result-label">Processed</div>
+                                <div class="result-half" style="flex: 1 0 100%;">
+                                    <img src="${result.processed}" alt="Processed" loading="lazy">
+                                    <div class="result-label">Click to compare</div>
                                 </div>
                             </div>
                             <div class="result-actions">
@@ -1230,7 +1226,6 @@
                 } else {
                     return `
                         <div class="result-card error">
-                            <img src="${result.original}" alt="Original">
                             <div class="error-overlay">
                                 <div class="error-text">Failed</div>
                                 <div class="error-detail">${result.error || 'Unknown error'}</div>
@@ -1290,24 +1285,42 @@
             
             const btn = event.target.closest('button');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<span>⏳</span><span>Creating ZIP...</span>';
             btn.disabled = true;
 
             try {
-                for (let i = 0; i < successfulResults.length; i++) {
-                    const result = successfulResults[i];
+                // Fetch all images in parallel with progress tracking
+                const fetchPromises = successfulResults.map(async (result, i) => {
+                    btn.innerHTML = `<span>⏳</span><span>Downloading ${i + 1}/${successfulResults.length}...</span>`;
                     debugLog(`  📥 ${i + 1}/${successfulResults.length}: ${result.originalName}`, 'info');
+                    
                     const response = await fetch(result.processed);
                     const blob = await response.blob();
-                    zip.file(`processed_${i + 1}_${result.originalName}`, blob);
-                }
+                    return {
+                        fileName: `processed_${i + 1}_${result.originalName}`,
+                        blob: blob
+                    };
+                });
 
-                debugLog('  🗜️ Generating ZIP...', 'info');
-                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const files = await Promise.all(fetchPromises);
+
+                // Add all files to ZIP
+                btn.innerHTML = '<span>⏳</span><span>Creating ZIP...</span>';
+                debugLog('  🗜️ Adding files to ZIP...', 'info');
+                files.forEach(file => {
+                    zip.file(file.fileName, file.blob);
+                });
+
+                debugLog('  🗜️ Generating ZIP file...', 'info');
+                const zipBlob = await zip.generateAsync({ 
+                    type: 'blob',
+                    compression: "DEFLATE",
+                    compressionOptions: { level: 6 }
+                });
+                
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
                 const zipName = `results_${timestamp}.zip`;
                 saveAs(zipBlob, zipName);
-                debugLog(`✓ ZIP downloaded: ${zipName}`, 'info');
+                debugLog(`✓ ZIP downloaded: ${zipName} (${(zipBlob.size / 1024 / 1024).toFixed(2)}MB)`, 'info');
 
             } catch (error) {
                 debugLog(`✗ ZIP failed: ${error.message}`, 'error');
