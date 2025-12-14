@@ -3,184 +3,1272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Batch Face Processor - DIAGNOSTIC</title>
+    <title>Artlist Labs - Batch Face Processor</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #000;
-            color: #fff;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
         }
-        .status {
-            background: #111;
-            border: 2px solid #FFD700;
-            padding: 20px;
-            margin: 20px 0;
+
+        .page {
+            min-height: 100vh;
+            padding-bottom: 320px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .top-nav {
+            background-color: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            font-size: 28px;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-badge {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .btn {
+            padding: 12px 24px;
             border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
         }
-        .log {
+
+        .primary-btn {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #0a0a0a;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #0a0a0a;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 215, 0, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .upload-section {
+            margin-top: 40px;
+        }
+
+        .upload-container {
+            margin-bottom: 60px;
+        }
+
+        .upload-box {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 80px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-box:hover,
+        .upload-box.dragover {
+            border-color: rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+
+        .upload-box h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .upload-box p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 32px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .preview-section {
+            margin-bottom: 60px;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .preview-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .preview-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .preview-card img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            background-color: rgba(255, 255, 255, 0.05);
+            display: block;
+        }
+
+        .preview-info {
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-name {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .remove-btn {
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 77, 77, 0.2);
+            border-color: rgba(255, 77, 77, 0.5);
+            color: #ff4d4d;
+        }
+
+        .processing-section {
+            margin-bottom: 60px;
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .processing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .processing-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .processing-card img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            display: block;
+            opacity: 0.5;
+        }
+
+        .processing-status {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .status-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .processing-status.complete {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .processing-status.complete .status-spinner {
+            display: none;
+        }
+
+        .processing-status.complete .status-text {
+            color: #4caf50;
+            font-size: 16px;
+        }
+
+        .processing-status.error {
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .processing-status.error .status-spinner {
+            display: none;
+        }
+
+        .processing-status.error .status-text {
+            color: #f44336;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            margin-bottom: 60px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .result-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .result-card.error {
+            cursor: default;
+        }
+
+        .result-card.error:hover {
+            transform: none;
+        }
+
+        .result-images {
+            display: flex;
+        }
+
+        .result-half {
+            flex: 1;
+            position: relative;
+        }
+
+        .result-half img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            display: block;
+        }
+
+        .result-label {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .result-actions {
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .error-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(244, 67, 54, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .error-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .error-detail {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+        }
+
+        .comparison-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+        }
+
+        .comparison-modal.show {
+            display: block;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .comparison-content {
+            position: relative;
             background: #0a0a0a;
-            border: 1px solid #333;
-            padding: 15px;
-            margin: 10px 0;
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            margin: 5vh auto;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header-bar h2 {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .modal-close-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #FFC107;
+            color: #FFC107;
+            transform: rotate(90deg);
+        }
+
+        .comparison-images {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 32px;
+            overflow: hidden;
+        }
+
+        .comparison-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            max-height: 100%;
+        }
+
+        .comparison-side h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .comparison-side img {
+            max-width: 100%;
+            max-height: calc(90vh - 250px);
+            object-fit: contain;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-divider {
+            width: 2px;
+            align-self: stretch;
+            background: linear-gradient(to bottom, 
+                transparent, 
+                rgba(255, 215, 0, 0.5) 20%, 
+                rgba(255, 215, 0, 0.5) 80%, 
+                transparent
+            );
+        }
+
+        .comparison-actions {
+            padding: 24px 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .debug-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border-top: 2px solid #FFD700;
             max-height: 300px;
             overflow-y: auto;
-            font-family: monospace;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
             font-size: 12px;
+            z-index: 10000;
         }
-        .success { color: #4CAF50; }
-        .error { color: #f44336; }
-        .warn { color: #FFC107; }
-        button {
-            background: #FFD700;
-            color: #000;
-            border: none;
-            padding: 15px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
+
+        .debug-log {
+            margin: 4px 0;
+            padding: 4px 8px;
+            border-left: 3px solid #666;
+        }
+
+        .debug-log.info { border-left-color: #4CAF50; color: #4CAF50; }
+        .debug-log.warn { border-left-color: #FFC107; color: #FFC107; }
+        .debug-log.error { border-left-color: #f44336; color: #f44336; }
+
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .debug-header h3 {
+            color: #FFD700;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .clear-debug {
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
             cursor: pointer;
-            margin: 10px 5px;
+            font-size: 11px;
         }
-        button:hover {
-            background: #FFA500;
+
+        @media (max-width: 768px) {
+            .nav-content {
+                padding: 0 20px;
+            }
+
+            .main-content {
+                padding: 40px 20px;
+            }
+
+            .hero-title {
+                font-size: 32px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .upload-box {
+                padding: 60px 20px;
+            }
+
+            .preview-grid,
+            .processing-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-images {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .comparison-divider {
+                width: 100%;
+                height: 2px;
+                background: linear-gradient(to right, 
+                    transparent, 
+                    rgba(255, 215, 0, 0.5) 20%, 
+                    rgba(255, 215, 0, 0.5) 80%, 
+                    transparent
+                );
+            }
+
+            .header-actions {
+                flex-direction: column;
+            }
+
+            .user-badge {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>🔍 DIAGNOSTIC MODE</h1>
-    
-    <div class="status">
-        <h2>System Status</h2>
-        <div id="systemStatus">Checking...</div>
+    <div id="main-page" class="page">
+        <nav class="top-nav">
+            <div class="nav-content">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">Artlist Labs</span>
+                </div>
+                <div class="nav-right">
+                    <span class="user-badge">Face Change Tool</span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <div class="hero-section">
+                <h1 class="hero-title">Batch Face Change Processor ✨</h1>
+                <p class="hero-subtitle">Upload multiple images and process them all at once</p>
+            </div>
+
+            <div class="upload-section">
+                <div class="upload-container">
+                    <div class="upload-box" id="uploadBox">
+                        <div class="upload-icon">📁</div>
+                        <h3>Drop images here or click to browse</h3>
+                        <p>Upload 1-50+ images (JPG, PNG, WebP)</p>
+                        <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                        <button class="primary-btn" onclick="document.getElementById('fileInput').click()">
+                            Select Images
+                        </button>
+                    </div>
+                </div>
+
+                <div id="previewSection" class="preview-section hidden">
+                    <div class="section-header">
+                        <h2 class="section-title">Selected Images (<span id="imageCount">0</span>)</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="clearImages()">
+                                <span>🗑️</span>
+                                <span>Clear All</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="processImages()" id="processBtn">
+                                <span>✨</span>
+                                <span>Process All</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="previewGrid" class="preview-grid"></div>
+                </div>
+
+                <div id="processingSection" class="processing-section hidden">
+                    <div class="section-header">
+                        <h2 class="section-title">Processing</h2>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progressText">0 / 0 processed</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                    </div>
+                    <div id="processingGrid" class="processing-grid"></div>
+                </div>
+
+                <div id="resultsSection" class="results-section hidden">
+                    <div class="section-header">
+                        <h2 class="section-title">Results (<span id="resultsCount">0</span>)</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="resetProcessor()">
+                                <span>🔄</span>
+                                <span>Process More</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="downloadAllAsZip()">
+                                <span>⬇️</span>
+                                <span>Download All as ZIP</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="resultsGrid" class="results-grid"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="status">
-        <h2>Test File Upload</h2>
-        <input type="file" id="fileInput" multiple accept="image/*">
-        <div class="log" id="fileLog">Select files to test...</div>
+    <div class="debug-panel" id="debugPanel">
+        <div class="debug-header">
+            <h3>📋 Debug Console</h3>
+            <button class="clear-debug" onclick="clearDebugLog()">Clear</button>
+        </div>
+        <div id="debugLog"></div>
     </div>
 
-    <div class="status">
-        <h2>Console Log</h2>
-        <div class="log" id="consoleLog"></div>
+    <div class="comparison-modal" id="comparisonModal">
+        <div class="modal-overlay" onclick="closeComparison()"></div>
+        <div class="comparison-content">
+            <div class="modal-header-bar">
+                <h2>Before & After</h2>
+                <button class="modal-close-btn" onclick="closeComparison()">×</button>
+            </div>
+            <div class="comparison-images">
+                <div class="comparison-side">
+                    <h3>Original</h3>
+                    <img id="comparisonOriginal" src="" alt="Original">
+                </div>
+                <div class="comparison-divider"></div>
+                <div class="comparison-side">
+                    <h3>Processed</h3>
+                    <img id="comparisonProcessed" src="" alt="Processed">
+                </div>
+            </div>
+            <div class="comparison-actions">
+                <button class="btn btn-primary" onclick="downloadComparisonResult()">
+                    <span>⬇️</span>
+                    <span>Download Processed</span>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- First: Load libraries without modules -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script type="module">
+        // Import FAL using the working esm.sh method
+        const falModule = await import('https://esm.sh/@fal-ai/client@1.1.0');
+        const fal = falModule.fal || falModule.default || falModule;
 
-    <!-- Second: Regular script (not module) -->
-    <script>
-        // Logging function
-        function log(msg, type = 'info') {
-            const consoleLog = document.getElementById('consoleLog');
-            const div = document.createElement('div');
-            div.className = type;
-            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            consoleLog.appendChild(div);
-            consoleLog.scrollTop = consoleLog.scrollHeight;
-            console.log(msg);
-        }
+        // Debug logging
+        window.debugLog = function(message, type = 'info') {
+            const log = document.getElementById('debugLog');
+            const entry = document.createElement('div');
+            entry.className = `debug-log ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            console[type === 'error' ? 'error' : type === 'warn' ? 'warn' : 'log'](message);
+        };
 
-        log('✅ Script started', 'success');
+        window.clearDebugLog = function() {
+            document.getElementById('debugLog').innerHTML = '';
+        };
 
-        // Check system
-        const status = document.getElementById('systemStatus');
-        let checks = '';
+        debugLog('✅ FAL library loaded successfully', 'success');
 
-        // Check 1: Basic DOM
-        checks += '✅ DOM ready<br>';
-        log('✅ DOM ready', 'success');
-
-        // Check 2: Libraries
-        if (typeof JSZip !== 'undefined') {
-            checks += '✅ JSZip loaded<br>';
-            log('✅ JSZip loaded', 'success');
+        // Configure with YOUR API key - REPLACE THIS!
+        const FAL_KEY = "YOUR_FAL_KEY_HERE";  // <-- REPLACE WITH YOUR ACTUAL FAL API KEY
+        
+        if (FAL_KEY === "YOUR_FAL_KEY_HERE") {
+            debugLog('⚠️ WARNING: Replace YOUR_FAL_KEY_HERE with your actual Fal API key!', 'warn');
         } else {
-            checks += '❌ JSZip NOT loaded<br>';
-            log('❌ JSZip NOT loaded', 'error');
+            debugLog('✅ API key configured', 'info');
         }
 
-        if (typeof saveAs !== 'undefined') {
-            checks += '✅ FileSaver loaded<br>';
-            log('✅ FileSaver loaded', 'success');
-        } else {
-            checks += '❌ FileSaver NOT loaded<br>';
-            log('❌ FileSaver NOT loaded', 'error');
-        }
-
-        status.innerHTML = checks;
-
-        // Test file input
-        const fileInput = document.getElementById('fileInput');
-        const fileLog = document.getElementById('fileLog');
-
-        log('Setting up file input listener...', 'info');
-
-        fileInput.addEventListener('change', function(e) {
-            log('🎯 FILE INPUT CHANGE EVENT FIRED!', 'success');
-            fileLog.innerHTML = `<div class="success">✅ Change event triggered!</div>`;
-            
-            const files = e.target.files;
-            log(`Files selected: ${files.length}`, 'success');
-            fileLog.innerHTML += `<div>Number of files: ${files.length}</div>`;
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                log(`File ${i+1}: ${file.name} (${file.type}, ${(file.size/1024).toFixed(1)}KB)`, 'info');
-                fileLog.innerHTML += `<div>📄 ${file.name} - ${(file.size/1024).toFixed(1)}KB</div>`;
-            }
-
-            // Try to read one file
-            if (files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    log('✅ Successfully read file as DataURL', 'success');
-                    fileLog.innerHTML += `<div class="success">✅ File read successfully (${e.target.result.length} chars)</div>`;
-                };
-                reader.onerror = function(e) {
-                    log('❌ Error reading file', 'error');
-                    fileLog.innerHTML += `<div class="error">❌ Error reading file</div>`;
-                };
-                reader.readAsDataURL(files[0]);
-            }
+        fal.config({
+            credentials: FAL_KEY
         });
 
-        log('✅ File input listener attached', 'success');
+        let selectedImages = [];
+        let processedResults = [];
 
-    </script>
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
-    <!-- Third: Try to load Fal as a module -->
-    <script type="module">
-        try {
-            const module = await import("https://cdn.jsdelivr.net/npm/@fal-ai/client@1.1.0/+esm");
-            window.fal = module;
-            
-            const status = document.getElementById('systemStatus');
-            status.innerHTML += '✅ Fal library loaded (ES6 module)<br>';
-            
-            // Add log function reference
-            const log = window.log || console.log;
-            log('✅ Fal library loaded successfully', 'success');
-            
-            console.log('Fal loaded:', window.fal);
-            
-        } catch (error) {
-            const status = document.getElementById('systemStatus');
-            status.innerHTML += '❌ Fal library FAILED: ' + error.message + '<br>';
-            
-            const log = window.log || console.log;
-            log('❌ Fal load error: ' + error.message, 'error');
-            
-            console.error('Fal load error:', error);
+        // Drag and drop
+        const uploadBox = document.getElementById('uploadBox');
+        
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            debugLog(`📁 Dropped ${files.length} files`, 'info');
+            addImages(files);
+        });
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            debugLog(`📁 Selected ${files.length} files`, 'info');
+            addImages(files);
         }
-    </script>
 
-    <script>
-        // Expose log globally
-        window.log = log;
-        log('✅ All scripts loaded', 'success');
+        async function addImages(files) {
+            if (files.length === 0) {
+                debugLog('⚠️ No files selected', 'warn');
+                return;
+            }
+            
+            debugLog(`➕ Adding ${files.length} images...`, 'info');
+            let added = 0;
+            
+            for (const file of files) {
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    selectedImages.push({
+                        file: file,
+                        preview: e.target.result,
+                        name: file.name,
+                        status: 'pending'
+                    });
+                    added++;
+                    debugLog(`  ✓ Added ${file.name} (${added}/${files.length})`, 'info');
+                    
+                    if (added === files.length) {
+                        updatePreviewGrid();
+                    }
+                };
+                
+                reader.onerror = () => {
+                    debugLog(`  ✗ Error reading ${file.name}`, 'error');
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updatePreviewGrid() {
+            const previewSection = document.getElementById('previewSection');
+            const previewGrid = document.getElementById('previewGrid');
+            const imageCount = document.getElementById('imageCount');
+
+            debugLog(`🖼️ Updating preview with ${selectedImages.length} images`, 'info');
+
+            if (selectedImages.length === 0) {
+                previewSection.classList.add('hidden');
+                return;
+            }
+
+            previewSection.classList.remove('hidden');
+            imageCount.textContent = selectedImages.length;
+
+            previewGrid.innerHTML = selectedImages.map((img, index) => `
+                <div class="preview-card">
+                    <img src="${img.preview}" alt="${img.name}">
+                    <div class="preview-info">
+                        <div class="preview-name">${img.name}</div>
+                        <button class="remove-btn" onclick="window.removeImage(${index})">×</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            debugLog('✅ Preview rendered', 'info');
+        }
+
+        window.removeImage = function(index) {
+            const removed = selectedImages[index].name;
+            selectedImages.splice(index, 1);
+            debugLog(`🗑️ Removed ${removed}`, 'info');
+            updatePreviewGrid();
+        }
+
+        window.clearImages = function() {
+            const count = selectedImages.length;
+            selectedImages = [];
+            updatePreviewGrid();
+            document.getElementById('fileInput').value = '';
+            debugLog(`🗑️ Cleared ${count} images`, 'info');
+        }
+
+        async function uploadImageToFal(imageData, imageName) {
+            try {
+                debugLog(`    ⬆️ Uploading ${imageName}...`, 'info');
+                const response = await fetch(imageData);
+                const blob = await response.blob();
+                
+                const file = await fal.storage.upload(blob);
+                debugLog(`    ✓ Uploaded: ${file.url}`, 'info');
+                return file.url;
+            } catch (error) {
+                debugLog(`    ✗ Upload failed: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        window.processImages = async function() {
+            if (selectedImages.length === 0) {
+                debugLog('⚠️ No images to process', 'warn');
+                alert('Please select images first');
+                return;
+            }
+
+            debugLog(`🚀 Processing ${selectedImages.length} images`, 'info');
+
+            document.getElementById('previewSection').classList.add('hidden');
+            document.getElementById('processingSection').classList.remove('hidden');
+            
+            const processingGrid = document.getElementById('processingGrid');
+
+            processingGrid.innerHTML = selectedImages.map((img, index) => `
+                <div class="processing-card" id="processing-${index}">
+                    <img src="${img.preview}" alt="${img.name}">
+                    <div class="processing-status">
+                        <div class="status-text">Queued...</div>
+                        <div class="status-spinner"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            processedResults = [];
+            let completed = 0;
+
+            const promises = selectedImages.map(async (img, index) => {
+                try {
+                    debugLog(`[${index + 1}] Processing ${img.name}`, 'info');
+                    
+                    updateProcessingStatus(index, 'Uploading...', 'uploading');
+                    const imageUrl = await uploadImageToFal(img.preview, img.name);
+
+                    updateProcessingStatus(index, 'Processing...', 'processing');
+                    debugLog(`    🔄 Calling workflow...`, 'info');
+                    
+                    // Use your workflow: workflows/Content-vlm7ci7l2p91/colby-change-subject-face
+                    const stream = await fal.stream("workflows/Content-vlm7ci7l2p91/colby-change-subject-face", {
+                        input: {
+                            image_urls: [imageUrl]
+                        }
+                    });
+
+                    const result = await stream.done();
+
+                    debugLog(`    ✓ Complete`, 'info');
+                    updateProcessingStatus(index, 'Complete ✓', 'complete');
+
+                    const processedUrl = result.output?.image?.url || 
+                                       result.image?.url || 
+                                       result.images?.[0]?.url ||
+                                       result.output?.url ||
+                                       null;
+
+                    processedResults.push({
+                        original: img.preview,
+                        originalName: img.name,
+                        processed: processedUrl,
+                        data: result
+                    });
+
+                    completed++;
+                    updateProgress(completed, selectedImages.length);
+
+                } catch (error) {
+                    debugLog(`[${index + 1}] ✗ Error: ${error.message}`, 'error');
+                    updateProcessingStatus(index, 'Error ✗', 'error');
+                    
+                    processedResults.push({
+                        original: img.preview,
+                        originalName: img.name,
+                        processed: null,
+                        error: error.message
+                    });
+
+                    completed++;
+                    updateProgress(completed, selectedImages.length);
+                }
+            });
+
+            await Promise.all(promises);
+
+            const successCount = processedResults.filter(r => r.processed).length;
+            debugLog(`✅ Complete! Success: ${successCount}/${selectedImages.length}`, 'info');
+            showResults();
+        }
+
+        function updateProcessingStatus(index, text, status) {
+            const card = document.getElementById(`processing-${index}`);
+            if (card) {
+                const statusEl = card.querySelector('.processing-status');
+                statusEl.className = `processing-status ${status}`;
+                statusEl.querySelector('.status-text').textContent = text;
+            }
+        }
+
+        function updateProgress(completed, total) {
+            const percent = Math.round((completed / total) * 100);
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = `${completed} / ${total} processed`;
+            document.getElementById('progressPercent').textContent = percent + '%';
+        }
+
+        function showResults() {
+            document.getElementById('processingSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.remove('hidden');
+            
+            const resultsGrid = document.getElementById('resultsGrid');
+            const resultsCount = document.getElementById('resultsCount');
+
+            const successfulResults = processedResults.filter(r => r.processed);
+            resultsCount.textContent = successfulResults.length;
+
+            resultsGrid.innerHTML = processedResults.map((result, index) => {
+                if (result.processed) {
+                    return `
+                        <div class="result-card" onclick="window.showComparison(${index})">
+                            <div class="result-images">
+                                <div class="result-half">
+                                    <img src="${result.original}" alt="Original">
+                                    <div class="result-label">Original</div>
+                                </div>
+                                <div class="result-half">
+                                    <img src="${result.processed}" alt="Processed">
+                                    <div class="result-label">Processed</div>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn-icon" onclick="event.stopPropagation(); window.downloadSingle('${result.processed}', '${result.originalName}')" title="Download">
+                                    ⬇️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="result-card error">
+                            <img src="${result.original}" alt="Original">
+                            <div class="error-overlay">
+                                <div class="error-text">Failed</div>
+                                <div class="error-detail">${result.error || 'Unknown error'}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        window.showComparison = function(index) {
+            const result = processedResults[index];
+            if (!result.processed) return;
+
+            document.getElementById('comparisonOriginal').src = result.original;
+            document.getElementById('comparisonProcessed').src = result.processed;
+            document.getElementById('comparisonModal').classList.add('show');
+            
+            window.currentComparisonResult = result;
+        }
+
+        window.closeComparison = function() {
+            document.getElementById('comparisonModal').classList.remove('show');
+        }
+
+        window.downloadComparisonResult = function() {
+            if (window.currentComparisonResult) {
+                downloadSingle(window.currentComparisonResult.processed, window.currentComparisonResult.originalName);
+            }
+        }
+
+        window.downloadSingle = async function(url, originalName) {
+            try {
+                debugLog(`⬇️ Downloading ${originalName}...`, 'info');
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const fileName = 'processed_' + originalName;
+                saveAs(blob, fileName);
+                debugLog(`✓ Downloaded ${fileName}`, 'info');
+            } catch (error) {
+                debugLog(`✗ Download failed: ${error.message}`, 'error');
+                alert('Failed to download');
+            }
+        }
+
+        window.downloadAllAsZip = async function() {
+            const zip = new JSZip();
+            const successfulResults = processedResults.filter(r => r.processed);
+
+            if (successfulResults.length === 0) {
+                debugLog('⚠️ No results to download', 'warn');
+                alert('No results to download');
+                return;
+            }
+
+            debugLog(`📦 Creating ZIP with ${successfulResults.length} images...`, 'info');
+            
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span><span>Creating ZIP...</span>';
+            btn.disabled = true;
+
+            try {
+                for (let i = 0; i < successfulResults.length; i++) {
+                    const result = successfulResults[i];
+                    debugLog(`  📥 ${i + 1}/${successfulResults.length}: ${result.originalName}`, 'info');
+                    const response = await fetch(result.processed);
+                    const blob = await response.blob();
+                    zip.file(`processed_${i + 1}_${result.originalName}`, blob);
+                }
+
+                debugLog('  🗜️ Generating ZIP...', 'info');
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const zipName = `results_${timestamp}.zip`;
+                saveAs(zipBlob, zipName);
+                debugLog(`✓ ZIP downloaded: ${zipName}`, 'info');
+
+            } catch (error) {
+                debugLog(`✗ ZIP failed: ${error.message}`, 'error');
+                alert('Failed to create ZIP');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        window.resetProcessor = function() {
+            debugLog('🔄 Resetting...', 'info');
+            selectedImages = [];
+            processedResults = [];
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('previewSection').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            updatePreviewGrid();
+        }
+
+        debugLog('✅ All systems ready!', 'success');
     </script>
 </body>
 </html>
