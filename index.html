@@ -1022,10 +1022,11 @@
                 debugLog(`    ⬆️ Uploading ${imageName}...`, 'info');
                 const response = await fetch(imageData);
                 const blob = await response.blob();
+                const file = new File([blob], imageName, { type: blob.type });
                 
-                const file = await fal.storage.upload(blob);
-                debugLog(`    ✓ Uploaded: ${file.url}`, 'info');
-                return file.url;
+                const uploadedUrl = await fal.storage.upload(file);
+                debugLog(`    ✓ Uploaded: ${uploadedUrl}`, 'info');
+                return uploadedUrl;
             } catch (error) {
                 debugLog(`    ✗ Upload failed: ${error.message}`, 'error');
                 throw error;
